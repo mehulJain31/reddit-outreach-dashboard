@@ -20,7 +20,7 @@ def main():
         print('Database initialized!')
     
     # Print startup info
-    port = 5002
+    port = 5003
     print(f'Starting Reddit Outreach Dashboard in {env} mode...')
     print(f'Open http://localhost:{port} in your browser')
     

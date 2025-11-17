@@ -21,7 +21,9 @@ class Config:
     DEFAULT_MESSAGE = """Hey!
 I just saw your post on r/FirstTimeHomeBuyer. Congrats on your new place that's awesome.
 I actually just closed on a house in Dallas too, and it was a pretty wild ride. I've been chatting with a few other recent buyers to hear how their last few weeks before closing went — what parts felt the most stressful or confusing.
-If you're up for it, I'd love to have a quick 15 minute chat sometime this week. Totally casual, just trying to learn from others who went through the same craziness so I can figure out how to make the process smoother for people like us."""
+If you're up for it, I'd love to have a quick 15 minute chat sometime this week. Totally casual, just trying to learn from others who went through the same craziness so I can figure out how to make the process smoother for people like us.
+
+You can book a time directly here: https://calendly.com/mehul-jainuta/15min"""
 
 
 class DevelopmentConfig(Config):
