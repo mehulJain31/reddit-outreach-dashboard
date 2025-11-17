@@ -113,9 +113,12 @@
                                     <h3 class="text-lg font-medium text-gray-900 mb-2">{{ post.post_title }}</h3>
                                     <div class="flex items-center space-x-4 text-sm text-gray-500">
                                         <a href="{{ post.post_url }}" target="_blank" 
-                                           class="text-blue-600 hover:text-blue-800 font-medium"
-                                           onclick="markAsClicked('{{ post.username }}')">
-                                            <i class="fas fa-user"></i> u/{{ post.username }}
+                                           class="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                                           onclick="markAsClicked('{{ post.username }}')"
+                                           title="Click to open profile and mark as sent">
+                                            <i class="fas fa-user"></i> 
+                                            u/{{ post.username }}
+                                            <i class="fas fa-external-link-alt ml-1 text-xs"></i>
                                         </a>
                                         <span><i class="far fa-clock"></i> {{ post.created_at.strftime('%m/%d %H:%M') }}</span>
                                     </div>
@@ -190,8 +193,9 @@
                     </div>
                     <div class="p-6">
                         <div class="message-box bg-gray-50 p-4 rounded-lg text-sm text-gray-700 mb-4" id="message-content">{{ message_content }}</div>
-                        <div class="text-xs text-gray-500">
-                            <i class="fas fa-info-circle"></i> Click on username to open their profile, then paste this message
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <div><i class="fas fa-info-circle"></i> Click on username to open their profile and auto-mark as sent</div>
+                            <div><i class="fas fa-copy"></i> Copy message, then paste in Reddit DM</div>
                         </div>
                     </div>
                 </div>
@@ -249,6 +253,50 @@
         // Mark as clicked (for potential future tracking)
         function markAsClicked(username) {
             console.log(`Profile link clicked for ${username}`);
+            
+            // Automatically mark as sent
+            fetch(`/auto_mark_sent/${username}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success notification
+                        showNotification(`${username} marked as sent!`, 'success');
+                        
+                        // Update the UI status badge after a short delay
+                        setTimeout(() => {
+                            location.reload(); // Simple refresh to update status
+                        }, 1000);
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking as sent:', error);
+                    showNotification('Failed to mark as sent', 'error');
+                });
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
         }
 
         // Refresh stats

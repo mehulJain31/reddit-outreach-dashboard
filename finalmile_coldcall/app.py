@@ -111,6 +111,17 @@ def register_routes(app: Flask, outreach_service: OutreachService) -> None:
         
         return redirect(url_for('dashboard'))
     
+    @app.route('/auto_mark_sent/<username>')
+    def auto_mark_sent(username: str):
+        """Automatically mark a user as sent when profile link is clicked."""
+        try:
+            if outreach_service.mark_as_sent(username):
+                return jsonify({'success': True, 'message': f'Marked {username} as sent.'})
+            else:
+                return jsonify({'success': False, 'message': f'User {username} not found.'})
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+    
     @app.route('/stats')
     def stats():
         """Show outreach statistics."""
