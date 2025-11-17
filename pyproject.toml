@@ -1,0 +1,11 @@
+[project]
+name = "reddit_scrape"
+version = "0.1.0"
+description = "Scraping utilities for different scrape types (e.g. finalmile_coldcall)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+[tool.reddit_scrape]
+# Each scraper type can live in its own top-level package/folder.
+# Example: finalmile_coldcall, another_scraper, etc.

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Outreach Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .status-sent { background-color: #10b981; }
+        .status-not-sent { background-color: #f59e0b; }
+        .message-box { 
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fab fa-reddit text-2xl"></i>
+                    <h1 class="text-2xl font-bold">Reddit Outreach Dashboard</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="refreshStats()" class="bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded transition">
+                        <i class="fas fa-chart-bar"></i> Stats
+                    </button>
+                    <a href="{{ url_for('refresh_posts') }}" class="bg-green-500 hover:bg-green-700 px-4 py-2 rounded transition inline-block">
+                        <i class="fas fa-sync"></i> Refresh Posts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div id="stats-bar" class="bg-white border-b shadow-sm hidden">
+        <div class="container mx-auto px-4 py-3">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+                <div class="stat-item">
+                    <div class="text-2xl font-bold text-blue-600" id="total-posts">-</div>
+                    <div class="text-sm text-gray-600">Total Posts</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-2xl font-bold text-green-600" id="sent-posts">-</div>
+                    <div class="text-sm text-gray-600">Sent</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-2xl font-bold text-yellow-600" id="not-sent-posts">-</div>
+                    <div class="text-sm text-gray-600">Not Sent</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-2xl font-bold text-purple-600" id="unique-locations">-</div>
+                    <div class="text-sm text-gray-600">Unique Locations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-2xl font-bold text-indigo-600" id="sent-percentage">-%</div>
+                    <div class="text-sm text-gray-600">Completion Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Filter Tabs -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="border-b">
+                <nav class="flex space-x-8 px-4" aria-label="Tabs">
+                    <a href="{{ url_for('dashboard', status='all') }}" 
+                       class="py-3 px-1 border-b-2 font-medium text-sm {% if status_filter == 'all' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                        All Posts ({{ posts.total }})
+                    </a>
+                    <a href="{{ url_for('dashboard', status='Not Sent') }}" 
+                       class="py-3 px-1 border-b-2 font-medium text-sm {% if status_filter == 'Not Sent' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                        Not Sent
+                    </a>
+                    <a href="{{ url_for('dashboard', status='Sent') }}" 
+                       class="py-3 px-1 border-b-2 font-medium text-sm {% if status_filter == 'Sent' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                        Sent
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Posts List -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b">
+                        <h2 class="text-lg font-semibold text-gray-900">Recent Posts</h2>
+                    </div>
+                    <div class="divide-y">
+                        {% for post in posts.items %}
+                        <div class="p-6 hover:bg-gray-50 transition">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                               {% if post.status == 'Sent' %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                            {{ post.status }}
+                                        </span>
+                                        {% if post.location and post.location != 'Unknown' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <i class="fas fa-map-marker-alt mr-1"></i>{{ post.location }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">{{ post.post_title }}</h3>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                        <a href="{{ post.post_url }}" target="_blank" 
+                                           class="text-blue-600 hover:text-blue-800 font-medium"
+                                           onclick="markAsClicked('{{ post.username }}')">
+                                            <i class="fas fa-user"></i> u/{{ post.username }}
+                                        </a>
+                                        <span><i class="far fa-clock"></i> {{ post.created_at.strftime('%m/%d %H:%M') }}</span>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex space-x-2">
+                                    {% if post.status == 'Not Sent' %}
+                                    <a href="{{ url_for('mark_sent', username=post.username) }}" 
+                                       class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition">
+                                        <i class="fas fa-check"></i> Mark Sent
+                                    </a>
+                                    {% else %}
+                                    <a href="{{ url_for('mark_not_sent', username=post.username) }}" 
+                                       class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition">
+                                        <i class="fas fa-undo"></i> Undo
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="p-6 text-center text-gray-500">
+                            No posts found. <a href="{{ url_for('refresh_posts') }}" class="text-blue-600 hover:underline">Refresh posts from Reddit</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if posts.pages > 1 %}
+                    <div class="px-6 py-4 border-t">
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-700">
+                                Showing {{ ((posts.page - 1) * posts.per_page + 1) }} to {{ (posts.page * posts.per_page) if posts.page * posts.per_page < posts.total else posts.total }} of {{ posts.total }} results
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if posts.has_prev %}
+                                <a href="{{ url_for('dashboard', page=posts.prev_num, status=status_filter) }}" 
+                                   class="px-3 py-1 border rounded text-sm hover:bg-gray-50">Previous</a>
+                                {% endif %}
+                                {% for page_num in posts.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != posts.page %}
+                                        <a href="{{ url_for('dashboard', page=page_num, status=status_filter) }}" 
+                                           class="px-3 py-1 border rounded text-sm hover:bg-gray-50">{{ page_num }}</a>
+                                        {% else %}
+                                        <span class="px-3 py-1 border rounded bg-blue-500 text-white">{{ page_num }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                    <span class="px-3 py-1">...</span>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if posts.has_next %}
+                                <a href="{{ url_for('dashboard', page=posts.next_num, status=status_filter) }}" 
+                                   class="px-3 py-1 border rounded text-sm hover:bg-gray-50">Next</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Message Template -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow sticky top-6">
+                    <div class="px-6 py-4 border-b">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-lg font-semibold text-gray-900">Message Template</h2>
+                            <button onclick="copyMessage()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="message-box bg-gray-50 p-4 rounded-lg text-sm text-gray-700 mb-4" id="message-content">{{ message_content }}</div>
+                        <div class="text-xs text-gray-500">
+                            <i class="fas fa-info-circle"></i> Click on username to open their profile, then paste this message
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed bottom-4 right-4 space-y-2 z-50">
+                {% for category, message in messages %}
+                    <div class="px-6 py-4 rounded-lg shadow-lg text-white
+                        {% if category == 'success' %}bg-green-500
+                        {% elif category == 'error' %}bg-red-500
+                        {% else %}bg-blue-500{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %} mr-2"></i>
+                            {{ message }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <script>
+        // Auto-refresh on first visit
+        if (!localStorage.getItem('dashboardVisited')) {
+            localStorage.setItem('dashboardVisited', 'true');
+            const url = new URL(window.location);
+            url.searchParams.set('auto_refresh', 'true');
+            window.location.href = url.toString();
+        }
+
+        // Copy message to clipboard
+        function copyMessage() {
+            const messageContent = document.getElementById('message-content').textContent;
+            navigator.clipboard.writeText(messageContent).then(() => {
+                // Show temporary success message
+                const button = event.target.closest('button');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.classList.add('bg-green-500');
+                button.classList.remove('bg-blue-500');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('bg-green-500');
+                    button.classList.add('bg-blue-500');
+                }, 2000);
+            });
+        }
+
+        // Mark as clicked (for potential future tracking)
+        function markAsClicked(username) {
+            console.log(`Profile link clicked for ${username}`);
+        }
+
+        // Refresh stats
+        async function refreshStats() {
+            const statsBar = document.getElementById('stats-bar');
+            
+            try {
+                const response = await fetch('/stats');
+                const stats = await response.json();
+                
+                document.getElementById('total-posts').textContent = stats.total_posts;
+                document.getElementById('sent-posts').textContent = stats.sent_posts;
+                document.getElementById('not-sent-posts').textContent = stats.not_sent_posts;
+                document.getElementById('unique-locations').textContent = stats.unique_locations;
+                document.getElementById('sent-percentage').textContent = stats.sent_percentage + '%';
+                
+                statsBar.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Auto-hide flash messages
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('.fixed.bottom-4.right-4 > div');
+            flashMessages.forEach(msg => {
+                msg.style.opacity = '0';
+                msg.style.transition = 'opacity 0.5s';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
+
+        // Load stats on page load
+        document.addEventListener('DOMContentLoaded', refreshStats);
+    </script>
+</body>
+</html>
