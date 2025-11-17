@@ -63,13 +63,14 @@ class OutreachService:
             db.session.rollback()
             raise Exception(f"Failed to refresh posts: {str(e)}")
     
-    def get_posts(self, page: int = 1, status_filter: str = 'all') -> List[OutreachStatus]:
+    def get_posts(self, page: int = 1, status_filter: str = 'all', per_page: int = 20) -> List[OutreachStatus]:
         """
         Get posts with pagination and filtering.
         
         Args:
             page: Page number
             status_filter: Filter by status ('all', 'Sent', 'Not Sent')
+            per_page: Posts per page
             
         Returns:
             Paginated list of posts
@@ -81,7 +82,7 @@ class OutreachService:
         
         return query.paginate(
             page=page, 
-            per_page=self.config.POSTS_PER_PAGE, 
+            per_page=per_page, 
             error_out=False
         )
     

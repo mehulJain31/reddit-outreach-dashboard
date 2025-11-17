@@ -60,7 +60,7 @@ def register_routes(app: Flask, outreach_service: OutreachService) -> None:
             except Exception as e:
                 flash(f'Auto-refresh error: {str(e)}', 'error')
         
-        posts = outreach_service.get_posts(page, status_filter)
+        posts = outreach_service.get_posts(page, status_filter, per_page=app.config.get('POSTS_PER_PAGE', 20))
         message_content = outreach_service.get_active_message_template()
         
         return render_template(
