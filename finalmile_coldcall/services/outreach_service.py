@@ -10,9 +10,10 @@ from config import Config
 class OutreachService:
     """Service class for outreach operations."""
     
-    def __init__(self, config: Config = None):
-        self.config = config or Config()
-        self.reddit_service = RedditService(config)
+    def __init__(self, app_config=None):
+        self.app_config = app_config or {}
+        self.config = Config()
+        self.reddit_service = RedditService()
     
     def refresh_posts(self) -> Dict[str, int]:
         """

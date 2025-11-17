@@ -8,8 +8,8 @@ from config import Config
 class RedditService:
     """Service class for Reddit operations."""
     
-    def __init__(self, config: Config = None):
-        self.config = config or Config()
+    def __init__(self):
+        self.config = Config()
     
     def fetch_recent_posts(self) -> List[Tuple[str, str, str]]:
         """
